@@ -1,0 +1,37 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Upgrade all packages
+      yum:
+        name: '*'
+        state: latest
+        
+    - name: ensure that all packages are updated and docker is installed
+      yum: 
+        pkg: docker
+        state: latest
+    
+    - name: ensure that docker is enabled and started
+      ansible.builtin.service:
+        name: docker
+        enabled: true
+
+    - name: add docker group to vagrant user
+      ansible.builtin.user:
+        name: vagrant
+        groups: docker
+
+    - name: enable docker tcp
+      ansible.builtin.lineinfile:
+        regexp: "^ExecStart="
+        line: ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H fd:// --containerd=/run/containerd/containerd.sock $OPTIONS $DOCKER_STORAGE_OPTIONS $DOCKER_ADD_RUNTIMES
+        path: /etc/systemd/system/multi-user.target.wants/docker.service
+        state: present
+        create: false
+
+    - name: ensure that docker is enabled and started
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: docker
