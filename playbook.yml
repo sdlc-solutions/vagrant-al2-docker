@@ -2,16 +2,38 @@
 - hosts: all
   become: yes
   tasks:
-    - name: Upgrade all packages
-      yum:
-        name: '*'
-        state: latest
-        
-    - name: ensure that all packages are updated and docker is installed
-      yum: 
-        pkg: docker
-        state: latest
+    - name: check OS version
+      debug: var=ansible_os_family
     
+    - block: # RHEL/CENTOS/AMAZON
+
+      - name: YUM - Upgrade all packages
+        yum:
+          name: '*'
+          state: latest
+          
+      - name: YUM - ensure that docker is installed
+        yum: 
+          pkg: docker
+          state: latest
+      
+      when: ansible_os_family == "RedHat" or ansible_os_family == "Amazon"
+
+    - block: # UBUNTU/DEBIAN
+
+      - name: APT - Upgrade all packages
+        apt:
+          name: '*'
+          update_cache: yes
+          state: latest
+          
+      - name: APT - ensure that docker is installed
+        apt: 
+          pkg: docker.io
+          state: latest
+
+      when: ansible_os_family == "Ubuntu" or ansible_os_family == "Debian"
+
     - name: ensure that docker is enabled and started
       ansible.builtin.service:
         name: docker
