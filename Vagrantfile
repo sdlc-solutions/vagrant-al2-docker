@@ -3,7 +3,8 @@
 
 Vagrant.configure("2") do |config|
 
-  config.vm.box = "gbailey/amzn2"
+  # config.vm.box = "gbailey/amzn2"
+  config.vm.box = "ubuntu"
 
   config.vm.box_check_update = true
 
